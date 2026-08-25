@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koine Greek Study</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+ --bg:#f4f6fb;--panel:#fff;--text:#172033;--muted:#697187;--accent:#575bea;--accent2:#4548c6;
+ --green:#208a63;--red:#c44f5a;--gold:#b17b17;--border:#e1e6ef;--shadow:0 18px 55px rgba(24,32,51,.10)
+}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+color:var(--text);background:linear-gradient(180deg,#fafbfe,#eef1f8);min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}.app{max-width:1160px;margin:auto;padding:28px 20px 60px}
+.card{background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow)}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:26px}.brand h1{margin:0;font-size:clamp(1.7rem,3vw,2.45rem);letter-spacing:-.04em}
+.brand p{margin:6px 0 0;color:var(--muted)}.header-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;background:rgba(255,255,255,.86);border:1px solid var(--border);padding:6px;border-radius:14px}
+.tab-btn{border:0;background:transparent;color:var(--muted);padding:10px 13px;border-radius:10px;font-weight:750}.tab-btn.active{background:var(--accent);color:#fff}
+.secondary{border:1px solid var(--border);background:#fff;color:var(--text);padding:10px 13px;border-radius:10px;font-weight:700}
+.primary{border:0;background:var(--accent);color:#fff;padding:12px 16px;border-radius:12px;font-weight:800}.primary:hover{background:var(--accent2)}
+.danger{color:var(--red)}.panel{display:none}.panel.active{display:block}.account-chip{border:1px solid var(--border);background:#fff;padding:9px 12px;border-radius:999px;color:var(--muted);font-size:.86rem;font-weight:750}
+#authView{min-height:80vh;display:grid;place-items:center}.auth-card{width:min(470px,100%);padding:30px}.auth-card h2{margin:0 0 5px}.auth-card>p{margin:0 0 22px;color:var(--muted)}
+label{display:block;margin:14px 0 7px;font-size:.84rem;font-weight:800;color:#434a5d}
+input[type=text],input[type=email],input[type=password],input[type=number],select{width:100%;border:1px solid var(--border);background:#fbfcfe;padding:12px 13px;border-radius:11px;outline:none}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(87,91,234,.12)}.full{width:100%;margin-top:18px}
+.switch-auth{margin-top:18px;text-align:center;color:var(--muted);font-size:.9rem}.link-btn{border:0;background:none;color:var(--accent);font-weight:800}
+.message{margin:0 0 16px;border-radius:11px;padding:11px 12px;font-size:.88rem}.message.error{background:#fff0f2;color:#9f3642}.message.ok{background:#edf9f4;color:#167354}
+.study-shell{max-width:870px;margin:auto}.study-controls{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;margin-bottom:14px;padding:16px}
+.control label{margin:0 0 6px}.check-control{display:flex;align-items:flex-end;padding-bottom:2px}.check-control label{display:flex;gap:7px;align-items:center;margin:0;white-space:nowrap}
+.check-control input{width:auto}.study-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0}.study-meta{color:var(--muted);font-weight:700}
+.flashcard-wrap{perspective:1200px;min-height:390px}.flashcard{position:relative;width:100%;min-height:390px;cursor:pointer;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+.flashcard.flipped{transform:rotateY(180deg)}.face{position:absolute;inset:0;border-radius:26px;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);
+backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px;text-align:center}.back{transform:rotateY(180deg)}
+.side-label{position:absolute;top:22px;left:24px;color:var(--muted);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:900}
+.term{font-size:clamp(2.15rem,7vw,4.5rem);line-height:1.1;font-family:"Times New Roman",Georgia,serif;font-weight:700}
+.entry-detail{margin-top:16px;color:var(--muted);font-family:"Times New Roman",Georgia,serif;font-size:1.15rem}.definition{font-size:clamp(1.55rem,4.6vw,2.8rem);line-height:1.23;font-weight:750}
+.principal-parts{margin-top:18px;color:var(--muted);line-height:1.5;max-width:700px;font-family:"Times New Roman",Georgia,serif;font-size:1.04rem}
+.hint{position:absolute;bottom:18px;color:#959caf;font-size:.82rem}.kbd{display:inline-block;border:1px solid #d8dce6;border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:#fff;font-size:.76rem;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.stat{background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.stat strong{display:block;font-size:1.25rem}.stat span{color:var(--muted);font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.study-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}.answer-btn{border:0;padding:14px 18px;border-radius:14px;color:#fff;font-weight:850;font-size:1rem}.wrong{background:var(--red)}.right{background:var(--green)}
+.nav-actions{display:flex;gap:10px;margin-top:12px;justify-content:center;flex-wrap:wrap}.per-card{text-align:center;color:var(--muted);font-size:.9rem;margin-top:13px}
+.library-card{padding:22px}.filters{display:grid;grid-template-columns:1fr .8fr .8fr 1fr;gap:10px;margin-bottom:16px}.library-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.library-head h2{margin:0}.count-pill{background:#f0f1ff;color:var(--accent2);font-weight:800;border-radius:999px;padding:6px 10px;font-size:.82rem}
+.library-list{display:grid;gap:9px;max-height:650px;overflow:auto}.word-row{display:grid;grid-template-columns:1.15fr 1.65fr .55fr .55fr auto;gap:12px;align-items:center;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fbfcfe}
+.word-greek{font-family:"Times New Roman",Georgia,serif;font-size:1.16rem;font-weight:700}.word-def{color:#4e566a;font-size:.9rem}.word-meta{color:var(--muted);font-size:.8rem}.star-btn{border:0;background:none;font-size:1.25rem;color:#b6bdcc}.star-btn.starred{color:var(--gold)}
+.manage-grid{display:grid;grid-template-columns:.85fr 1.35fr;gap:22px}.form-card,.list-card{padding:24px}.form-card{align-self:start}.form-card h2,.list-card h2{margin:0 0 18px;font-size:1.15rem}
+.greek-input{font-family:"Times New Roman",Georgia,serif;font-size:1.2rem}.small-note{color:var(--muted);font-size:.82rem;line-height:1.5;margin-top:14px}
+.card-list{display:grid;gap:10px;max-height:580px;overflow:auto}.vocab-row{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:12px;border:1px solid var(--border);border-radius:14px;padding:13px 14px;background:#fbfcfe}
+.vocab-row .greek{font-family:"Times New Roman",Georgia,serif;font-size:1.25rem;font-weight:700}.vocab-row .english{color:var(--muted)}.vocab-row button{border:0;background:none;color:var(--red);font-weight:800}
+.empty,.loading{text-align:center;color:var(--muted);padding:55px 20px}
+@media(max-width:850px){header{align-items:flex-start;flex-direction:column}.study-controls,.filters{grid-template-columns:1fr 1fr}.manage-grid{grid-template-columns:1fr}.word-row{grid-template-columns:1fr auto}.word-def{grid-column:1/2}.word-meta{display:none}}
+@media(max-width:560px){.study-controls,.filters{grid-template-columns:1fr}.tabs{width:100%;overflow:auto}.tab-btn{flex:1}.flashcard,.flashcard-wrap,.face{min-height:330px}.vocab-row{grid-template-columns:1fr auto}.vocab-row .english{grid-column:1/2}}
+</style>
+</head>
+<body>
+
+<div id="authView" class="app">
+ <div class="card auth-card">
+  <div class="brand" style="margin-bottom:26px"><h1>Koine Greek Study</h1><p>Your vocabulary, synced to your account.</p></div>
+  <div id="loginForm">
+   <h2>Log in</h2><p>Access your Greek vocabulary and progress.</p>
+   <label>Email</label><input id="loginEmail" type="email" autocomplete="email">
+   <label>Password</label><input id="loginPassword" type="password" autocomplete="current-password">
+   <button id="loginBtn" class="primary full">Log in</button>
+   <div class="switch-auth">No account? <button class="link-btn" id="showSignup">Create one</button></div>
+  </div>
+  <div id="signupForm" class="hidden">
+   <h2>Create account</h2><p>Username is for display; email + password handle login.</p>
+   <label>Username</label><input id="signupUsername" type="text">
+   <label>Email</label><input id="signupEmail" type="email">
+   <label>Password</label><input id="signupPassword" type="password" autocomplete="new-password">
+   <button id="signupBtn" class="primary full">Create account</button>
+   <div class="switch-auth">Already have an account? <button class="link-btn" id="showLogin">Log in</button></div>
+  </div>
+  <div id="authMessage"></div>
+ </div>
+</div>
+
+<div id="mainView" class="app hidden">
+<header>
+ <div class="brand"><h1>Koine Greek Study</h1><p>Mounce vocabulary + your custom flashcards.</p></div>
+ <div class="header-right">
+  <div class="tabs">
+   <button class="tab-btn active" data-tab="study">Study</button>
+   <button class="tab-btn" data-tab="library">Vocabulary</button>
+   <button class="tab-btn" data-tab="manage">My Cards</button>
+  </div>
+  <span class="account-chip" id="accountChip">Signed in</span>
+  <button id="logoutBtn" class="secondary">Log out</button>
+ </div>
+</header>
+<div id="appMessage"></div>
+
+<section id="study" class="panel active">
+ <div class="study-shell">
+  <div class="card study-controls">
+   <div class="control"><label>Study source</label>
+    <select id="studySource"><option value="mounce">Mounce / FlashWorks</option><option value="custom">My custom cards</option></select>
+   </div>
+   <div class="control" id="lessonControl"><label>Lesson</label><select id="studyLesson"></select></div>
+   <div class="control" id="freqControl"><label>Minimum NT frequency</label><input id="studyFrequency" type="number" min="0" value="0"></div>
+   <div class="check-control" id="starControl"><label><input type="checkbox" id="starredOnly"> Starred only</label></div>
+  </div>
+  <div class="study-top"><div class="study-meta" id="progressText">Loading…</div><button class="secondary danger" id="clearStatsBtn">Clear current counters</button></div>
+  <div class="flashcard-wrap">
+   <div class="flashcard" id="flashcard">
+    <div class="face front">
+     <div class="side-label">Greek</div>
+     <div class="term" id="greekTerm">Loading…</div>
+     <div class="entry-detail" id="entryDetail"></div>
+     <div class="hint">Click or press <span class="kbd">Space</span> to flip</div>
+    </div>
+    <div class="face back">
+     <div class="side-label">English</div>
+     <div class="definition" id="englishDefinition"></div>
+     <div class="principal-parts" id="principalParts"></div>
+     <div class="hint">Click or press <span class="kbd">Space</span> to flip</div>
+    </div>
+   </div>
+  </div>
+  <div class="stats">
+   <div class="stat"><span>Right</span><strong id="totalRight">0</strong></div>
+   <div class="stat"><span>Wrong</span><strong id="totalWrong">0</strong></div>
+   <div class="stat"><span>Accuracy</span><strong id="accuracy">—</strong></div>
+  </div>
+  <div class="study-actions"><button class="answer-btn wrong" id="wrongBtn">✕ Wrong</button><button class="answer-btn right" id="rightBtn">✓ Right</button></div>
+  <div class="nav-actions"><button class="secondary" id="prevBtn">← Previous</button><button class="secondary" id="starStudyBtn">☆ Star</button><button class="secondary" id="shuffleBtn">Shuffle</button><button class="secondary" id="nextBtn">Next →</button></div>
+  <div class="per-card" id="perCardStats"></div>
+ </div>
+</section>
+
+<section id="library" class="panel">
+ <div class="card library-card">
+  <div class="library-head"><h2>Mounce Vocabulary</h2><span class="count-pill" id="libraryCount">0 words</span></div>
+  <div class="filters">
+   <div><label>Search</label><input id="librarySearch" type="text" placeholder="Greek, English, transliteration"></div>
+   <div><label>Lesson</label><select id="libraryLesson"></select></div>
+   <div><label>Part of speech</label><select id="libraryPos"><option value="all">All</option><option value="N">N</option><option value="V">V</option><option value="A">A</option><option value="P">P</option><option value="O">O</option><option value="U">U</option></select></div>
+   <div><label>Minimum frequency</label><input id="libraryFrequency" type="number" min="0" value="0"></div>
+  </div>
+  <div class="library-list" id="libraryList"><div class="loading">Loading vocabulary…</div></div>
+ </div>
+</section>
+
+<section id="manage" class="panel">
+ <div class="manage-grid">
+  <div class="card form-card">
+   <h2>Add a custom flashcard</h2>
+   <label>Koine Greek</label><input id="greekInput" class="greek-input" type="text" placeholder="e.g. χάρις">
+   <label>English</label><input id="englishInput" type="text" placeholder="e.g. grace">
+   <button class="primary full" id="addBtn">Add flashcard</button>
+   <p class="small-note">Custom cards remain private to your account. The shared Mounce vocabulary lives in the Vocabulary tab.</p>
+  </div>
+  <div class="card list-card">
+   <div class="library-head"><h2>Your custom cards</h2><span class="count-pill" id="cardCount">0 cards</span></div>
+   <div class="card-list" id="cardList"></div>
+  </div>
+ </div>
+</section>
+</div>
+
+<script>
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+let currentUser=null;
+let customCards=[];
+let greekWords=[];
+let progressMap=new Map();
+let studyCards=[];
+let studyIndex=0;
+
+const $=id=>document.getElementById(id);
+const flashcard=$("flashcard");
+
+function esc(s){return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function setMessage(target,text,type="error"){target.innerHTML=text?`<div class="message ${type}">${esc(text)}</div>`:""}
+function usernameFor(u){return u?.user_metadata?.username||u?.email?.split("@")[0]||"User"}
+
+async function init(){
+ const {data:{session}}=await sb.auth.getSession();
+ if(session?.user) await enterApp(session.user);
+ sb.auth.onAuthStateChange((event)=>{if(event==="SIGNED_OUT")showLoggedOut()});
+}
+function showLoggedOut(){currentUser=null;$("mainView").classList.add("hidden");$("authView").classList.remove("hidden")}
+async function enterApp(user){
+ currentUser=user;$("authView").classList.add("hidden");$("mainView").classList.remove("hidden");$("accountChip").textContent=usernameFor(user);
+ await Promise.all([loadCustomCards(),loadGreekWords(),loadProgress()]);
+ populateLessonSelectors();rebuildStudyDeck();renderLibrary();
+}
+$("showSignup").onclick=()=>{$("loginForm").classList.add("hidden");$("signupForm").classList.remove("hidden");setMessage($("authMessage"),"")};
+$("showLogin").onclick=()=>{$("signupForm").classList.add("hidden");$("loginForm").classList.remove("hidden");setMessage($("authMessage"),"")};
+$("loginBtn").onclick=async()=>{
+ const {data,error}=await sb.auth.signInWithPassword({email:$("loginEmail").value.trim(),password:$("loginPassword").value});
+ if(error)return setMessage($("authMessage"),error.message);setMessage($("authMessage"),"");await enterApp(data.user)
+};
+$("signupBtn").onclick=async()=>{
+ const username=$("signupUsername").value.trim(),email=$("signupEmail").value.trim(),password=$("signupPassword").value;
+ if(!username||!email||!password)return setMessage($("authMessage"),"Enter username, email, and password.");
+ const {data,error}=await sb.auth.signUp({email,password,options:{data:{username}}});
+ if(error)return setMessage($("authMessage"),error.message);
+ if(data.session&&data.user)await enterApp(data.user);
+ else{setMessage($("authMessage"),"Account created. Confirm your email, then log in.","ok");$("signupForm").classList.add("hidden");$("loginForm").classList.remove("hidden");$("loginEmail").value=email}
+};
+$("logoutBtn").onclick=async()=>{await sb.auth.signOut();showLoggedOut()};
+
+async function loadCustomCards(){
+ const {data,error}=await sb.from("flashcards").select("id,greek,english,right_count,wrong_count,created_at").order("created_at",{ascending:true});
+ if(error){setMessage($("appMessage"),"Custom cards: "+error.message);customCards=[]}else customCards=data||[];
+ renderCustomCards();
+}
+async function loadGreekWords(){
+ greekWords=[];const batch=1000;
+ for(let from=0;;from+=batch){
+  const {data,error}=await sb.from("greek_words").select("id,lesson,pos_code,nt_frequency,greek_entry,greek_headword,definition,principal_parts,transliteration_key").order("id",{ascending:true}).range(from,from+batch-1);
+  if(error){setMessage($("appMessage"),"Vocabulary: "+error.message);return}
+  greekWords.push(...(data||[]));if(!data||data.length<batch)break;
+ }
+}
+async function loadProgress(){
+ const {data,error}=await sb.from("user_word_progress").select("word_id,right_count,wrong_count,starred,last_studied");
+ if(error){setMessage($("appMessage"),"Progress: "+error.message);progressMap=new Map();return}
+ progressMap=new Map((data||[]).map(p=>[Number(p.word_id),p]));
+}
+function progressFor(wordId){
+ const id=Number(wordId);
+ return progressMap.get(id)||{word_id:id,right_count:0,wrong_count:0,starred:false,last_studied:null}
+}
+
+function populateLessonSelectors(){
+ const lessons=[...new Set(greekWords.map(w=>Number(w.lesson)))].sort((a,b)=>a-b);
+ const make=(el,includeAll=true)=>{
+  const current=el.value;el.innerHTML=includeAll?'<option value="all">All vocabulary</option>':"";
+  lessons.forEach(n=>{const o=document.createElement("option");o.value=String(n);o.textContent=n===99?"Additional vocabulary (99)":`Lesson ${n}`;el.appendChild(o)});
+  if([...el.options].some(o=>o.value===current))el.value=current;
+ };
+ make($("studyLesson"));make($("libraryLesson"));
+}
+function rebuildStudyDeck(){
+ const source=$("studySource").value;
+ $("lessonControl").classList.toggle("hidden",source==="custom");$("freqControl").classList.toggle("hidden",source==="custom");$("starControl").classList.toggle("hidden",source==="custom");
+ if(source==="custom"){
+  studyCards=customCards.map(c=>({kind:"custom",...c}));
+ }else{
+  const lesson=$("studyLesson").value,minFreq=Number($("studyFrequency").value||0),starredOnly=$("starredOnly").checked;
+  studyCards=greekWords.filter(w=>(lesson==="all"||String(w.lesson)===lesson)&&Number(w.nt_frequency)>=minFreq&&(!starredOnly||progressFor(w.id).starred)).map(w=>({kind:"mounce",...w}));
+ }
+ studyIndex=0;renderStudy();
+}
+function currentStudy(){return studyCards[studyIndex]}
+function renderStudy(){
+ flashcard.classList.remove("flipped");
+ const c=currentStudy();
+ if(!c){
+  $("greekTerm").textContent="No matching cards";$("entryDetail").textContent="";$("englishDefinition").textContent="Adjust your study filters or add a custom card.";
+  $("principalParts").textContent="";$("progressText").textContent="0 cards";$("perCardStats").textContent="";$("totalRight").textContent="0";$("totalWrong").textContent="0";$("accuracy").textContent="—";$("starStudyBtn").classList.add("hidden");return
+ }
+ $("progressText").textContent=`Card ${studyIndex+1} of ${studyCards.length}`;
+ if(c.kind==="mounce"){
+  const p=progressFor(c.id);$("greekTerm").textContent=c.greek_headword;$("entryDetail").textContent=c.greek_entry!==c.greek_headword?c.greek_entry:"";
+  $("englishDefinition").textContent=c.definition;$("principalParts").textContent=c.principal_parts?`Principal parts: ${c.principal_parts}`:"";
+  $("perCardStats").textContent=`This word: ${p.right_count} right · ${p.wrong_count} wrong · NT frequency ${c.nt_frequency}`;
+  $("starStudyBtn").classList.remove("hidden");$("starStudyBtn").textContent=p.starred?"★ Starred":"☆ Star";
+ }else{
+  $("greekTerm").textContent=c.greek;$("entryDetail").textContent="";$("englishDefinition").textContent=c.english;$("principalParts").textContent="";
+  $("perCardStats").textContent=`This card: ${c.right_count} right · ${c.wrong_count} wrong`;$("starStudyBtn").classList.add("hidden");
+ }
+ const totals=studyCards.reduce((a,x)=>{
+  const p=x.kind==="mounce"?progressFor(x.id):x;a.r+=Number(p.right_count||0);a.w+=Number(p.wrong_count||0);return a
+ },{r:0,w:0});
+ $("totalRight").textContent=totals.r;$("totalWrong").textContent=totals.w;$("accuracy").textContent=totals.r+totals.w?`${Math.round(totals.r/(totals.r+totals.w)*100)}%`:"—";
+}
+async function grade(right){
+ const c=currentStudy();if(!c)return;
+ if(c.kind==="custom"){
+  const patch=right?{right_count:c.right_count+1}:{wrong_count:c.wrong_count+1};
+  Object.assign(c,patch);const original=customCards.find(x=>x.id===c.id);if(original)Object.assign(original,patch);
+  renderStudy();await sb.from("flashcards").update(patch).eq("id",c.id);
+ }else{
+  const p=progressFor(c.id),next={...p,user_id:currentUser.id,word_id:c.id,last_studied:new Date().toISOString()};
+  if(right)next.right_count++;else next.wrong_count++;
+  progressMap.set(Number(c.id),next);renderStudy();
+  const {error}=await sb.from("user_word_progress").upsert(next,{onConflict:"user_id,word_id"});
+  if(error)setMessage($("appMessage"),"Could not save progress: "+error.message);
+ }
+ setTimeout(goNext,100);
+}
+async function toggleStar(wordId){
+ const p=progressFor(wordId),next={...p,user_id:currentUser.id,word_id:Number(wordId),starred:!p.starred};
+ progressMap.set(Number(wordId),next);renderStudy();renderLibrary();
+ const {error}=await sb.from("user_word_progress").upsert(next,{onConflict:"user_id,word_id"});
+ if(error)setMessage($("appMessage"),"Could not save star: "+error.message);
+}
+async function clearCurrentStats(){
+ if(!studyCards.length||!confirm("Clear right/wrong counters for the cards in the current study set?"))return;
+ if($("studySource").value==="custom"){
+  const ids=studyCards.map(c=>c.id);const {error}=await sb.from("flashcards").update({right_count:0,wrong_count:0}).in("id",ids);
+  if(error)return setMessage($("appMessage"),error.message);customCards.forEach(c=>{if(ids.includes(c.id)){c.right_count=0;c.wrong_count=0}});
+ }else{
+  const ids=studyCards.map(c=>Number(c.id));
+  for(const id of ids){const p=progressFor(id);progressMap.set(id,{...p,user_id:currentUser.id,word_id:id,right_count:0,wrong_count:0})}
+  const rows=ids.map(id=>progressMap.get(id));
+  const {error}=await sb.from("user_word_progress").upsert(rows,{onConflict:"user_id,word_id"});
+  if(error)return setMessage($("appMessage"),error.message);
+ }
+ renderStudy();renderLibrary();
+}
+function goNext(){if(studyCards.length){studyIndex=(studyIndex+1)%studyCards.length;renderStudy()}}
+function goPrev(){if(studyCards.length){studyIndex=(studyIndex-1+studyCards.length)%studyCards.length;renderStudy()}}
+
+function renderLibrary(){
+ const q=$("librarySearch").value.trim().toLowerCase(),lesson=$("libraryLesson").value,pos=$("libraryPos").value,minFreq=Number($("libraryFrequency").value||0);
+ const filtered=greekWords.filter(w=>{
+  const search=`${w.greek_entry} ${w.greek_headword} ${w.definition} ${w.transliteration_key||""}`.toLowerCase();
+  return(!q||search.includes(q))&&(lesson==="all"||String(w.lesson)===lesson)&&(pos==="all"||w.pos_code===pos)&&Number(w.nt_frequency)>=minFreq
+ });
+ $("libraryCount").textContent=`${filtered.length} words`;$("libraryList").innerHTML="";
+ if(!filtered.length){$("libraryList").innerHTML='<div class="empty">No matching vocabulary.</div>';return}
+ filtered.forEach(w=>{
+  const p=progressFor(w.id),row=document.createElement("div");row.className="word-row";
+  row.innerHTML=`<div class="word-greek">${esc(w.greek_entry)}</div><div class="word-def">${esc(w.definition)}</div><div class="word-meta">L${esc(w.lesson)}</div><div class="word-meta">Freq ${esc(w.nt_frequency)}</div>`;
+  const star=document.createElement("button");star.className="star-btn"+(p.starred?" starred":"");star.textContent=p.starred?"★":"☆";star.title="Star this word";star.onclick=()=>toggleStar(w.id);row.appendChild(star);$("libraryList").appendChild(row)
+ });
+}
+function renderCustomCards(){
+ $("cardCount").textContent=`${customCards.length} ${customCards.length===1?"card":"cards"}`;$("cardList").innerHTML="";
+ if(!customCards.length){$("cardList").innerHTML='<div class="empty">No custom cards yet.</div>';return}
+ customCards.forEach(c=>{const row=document.createElement("div");row.className="vocab-row";const g=document.createElement("div");g.className="greek";g.textContent=c.greek;
+ const e=document.createElement("div");e.className="english";e.textContent=c.english;const b=document.createElement("button");b.textContent="Delete";b.onclick=()=>deleteCustom(c.id);row.append(g,e,b);$("cardList").appendChild(row)})
+}
+async function addCustom(){
+ const greek=$("greekInput").value.trim(),english=$("englishInput").value.trim();if(!greek||!english)return;
+ const {data,error}=await sb.from("flashcards").insert({user_id:currentUser.id,greek,english,right_count:0,wrong_count:0}).select().single();
+ if(error)return setMessage($("appMessage"),error.message);customCards.push(data);$("greekInput").value="";$("englishInput").value="";renderCustomCards();if($("studySource").value==="custom")rebuildStudyDeck()
+}
+async function deleteCustom(id){
+ const {error}=await sb.from("flashcards").delete().eq("id",id);if(error)return setMessage($("appMessage"),error.message);
+ customCards=customCards.filter(c=>c.id!==id);renderCustomCards();if($("studySource").value==="custom")rebuildStudyDeck()
+}
+
+$("studySource").onchange=rebuildStudyDeck;$("studyLesson").onchange=rebuildStudyDeck;$("studyFrequency").oninput=rebuildStudyDeck;$("starredOnly").onchange=rebuildStudyDeck;
+$("librarySearch").oninput=renderLibrary;$("libraryLesson").onchange=renderLibrary;$("libraryPos").onchange=renderLibrary;$("libraryFrequency").oninput=renderLibrary;
+$("rightBtn").onclick=()=>grade(true);$("wrongBtn").onclick=()=>grade(false);$("nextBtn").onclick=goNext;$("prevBtn").onclick=goPrev;$("clearStatsBtn").onclick=clearCurrentStats;
+$("starStudyBtn").onclick=()=>{const c=currentStudy();if(c?.kind==="mounce")toggleStar(c.id)};
+$("shuffleBtn").onclick=()=>{for(let i=studyCards.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[studyCards[i],studyCards[j]]=[studyCards[j],studyCards[i]]}studyIndex=0;renderStudy()};
+$("addBtn").onclick=addCustom;$("englishInput").addEventListener("keydown",e=>{if(e.key==="Enter")addCustom()});flashcard.onclick=()=>{if(studyCards.length)flashcard.classList.toggle("flipped")};
+document.querySelectorAll(".tab-btn").forEach(btn=>btn.onclick=()=>{document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));btn.classList.add("active");$(btn.dataset.tab).classList.add("active")});
+document.addEventListener("keydown",e=>{if(document.activeElement.tagName==="INPUT"||document.activeElement.tagName==="SELECT"||$("mainView").classList.contains("hidden"))return;
+ if(e.code==="Space"){e.preventDefault();if(studyCards.length)flashcard.classList.toggle("flipped")}else if(e.key==="ArrowRight")goNext();else if(e.key==="ArrowLeft")goPrev();else if(e.key.toLowerCase()==="r")grade(true);else if(e.key.toLowerCase()==="w")grade(false)});
+init();
+</script>
+</body>
+</html>
